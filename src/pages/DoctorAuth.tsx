@@ -16,9 +16,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Heart, Shield, Wallet, Building2, User, Lock, Mail, Phone, GraduationCap, Stethoscope, Settings, LogOut, UserCircle } from "lucide-react";
+import { Heart, Shield, Wallet, Building2, User, Lock, Mail, Phone, GraduationCap, Stethoscope, Settings, LogOut, UserCircle, Sun, Moon } from "lucide-react";
 import { toast } from "sonner";
 import { initializeSampleDoctors } from "@/lib/sampleDoctors";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const SAMPLE_HOSPITALS = [
   { id: "H001", name: "Apollo Hospitals", city: "Mumbai" },
@@ -31,6 +32,7 @@ const SAMPLE_HOSPITALS = [
 export default function DoctorAuth() {
   const navigate = useNavigate();
   const { doctorLogin, registerDoctor, isDoctorAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const { theme, setTheme } = useTheme();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -160,73 +162,73 @@ export default function DoctorAuth() {
   const selectedHospital = SAMPLE_HOSPITALS.find(h => h.id === registerData.hospitalId);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
+    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,hsla(var(--primary),0.14),transparent_55%),radial-gradient(ellipse_at_bottom,hsla(var(--secondary),0.12),transparent_55%)]">
       {/* Header with Account Dropdown */}
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Heart className="h-6 w-6 text-primary" />
-            <span className="font-bold text-xl">RakshaHealth</span>
-          </div>
+          <button type="button" onClick={() => navigate("/")} className="flex items-center gap-2">
+            <div className="h-9 w-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+              <Heart className="h-5 w-5 text-primary" />
+            </div>
+            <div className="leading-tight text-left">
+              <div className="font-bold">RakshaHealth</div>
+              <div className="text-xs text-muted-foreground">Doctor Portal</div>
+            </div>
+          </button>
           
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                <UserCircle className="h-8 w-8" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount>
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">Doctor Account</p>
-                  <p className="text-xs leading-none text-muted-foreground">
-                    Medical Professional Portal
-                  </p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
-                <span>Profile</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Log out</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} title="Toggle theme">
+              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <UserCircle className="h-8 w-8" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">Doctor Account</p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      Medical Professional Portal
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </header>
       
-      <div className="flex items-center justify-center p-4">
-        <div className="w-full max-w-4xl">
+      <div className="container mx-auto px-4 py-10">
+        <div className="mx-auto w-full max-w-3xl space-y-6">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Heart className="h-10 w-10 text-primary" />
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              RakshaHealth
-            </h1>
-          </div>
-          {/* Doctor Account Logo */}
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="p-3 rounded-full bg-primary/10 border border-primary/20">
-              <Stethoscope className="h-8 w-8 text-primary" />
-            </div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-2xl font-bold text-primary">Doctor Portal</h2>
-              <Shield className="h-6 w-6 text-primary" />
+          <div className="text-center space-y-2">
+            <div className="flex items-center justify-center gap-3">
+              <div className="h-12 w-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+                <Stethoscope className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Doctor Portal</h1>
+                <p className="text-sm text-muted-foreground">Secure authentication for medical professionals</p>
+              </div>
             </div>
           </div>
-          <p className="text-muted-foreground">
-            Secure authentication for medical professionals
-          </p>
-        </div>
 
         <Tabs defaultValue="login" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-6">
@@ -240,18 +242,16 @@ export default function DoctorAuth() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="login">
-            <Card className="max-w-2xl mx-auto">
-              <CardHeader className="text-center">
-                <CardTitle className="flex items-center justify-center gap-2">
-                  <Shield className="h-6 w-6 text-primary" />
-                  Doctor Authentication
+          <TabsContent value="login" className="mt-4">
+            <Card className="border-primary/15">
+              <CardHeader className="bg-gradient-to-r from-primary/5 to-secondary/5">
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-primary" />
+                  Doctor Sign In
                 </CardTitle>
-                <CardDescription>
-                  Access your verified medical professional account
-                </CardDescription>
+                <CardDescription>Access your verified medical professional account</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-6">
                 {error && (
                   <Alert className="mb-6" variant="destructive">
                     <AlertDescription>{error}</AlertDescription>
@@ -343,18 +343,16 @@ export default function DoctorAuth() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="register">
-            <Card className="max-w-4xl mx-auto">
-              <CardHeader className="text-center">
-                <CardTitle className="flex items-center justify-center gap-2">
-                  <User className="h-6 w-6 text-primary" />
-                  Doctor Registration
+          <TabsContent value="register" className="mt-4">
+            <Card className="border-primary/15">
+              <CardHeader className="bg-gradient-to-r from-primary/5 to-secondary/5">
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5 text-primary" />
+                  Register New Doctor
                 </CardTitle>
-                <CardDescription>
-                  Join RakshaHealth's verified medical professional network
-                </CardDescription>
+                <CardDescription>Join our network of verified medical professionals</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-6">
                 {error && (
                   <Alert className="mb-6" variant="destructive">
                     <AlertDescription>{error}</AlertDescription>
@@ -560,9 +558,45 @@ export default function DoctorAuth() {
 
         <div className="text-center mt-8">
           <Button variant="outline" onClick={() => navigate("/")}>
-            Back to Patient Portal
+            Back to Main Portal
           </Button>
         </div>
+
+        {/* Doctor Portal Features Info */}
+        <Card className="border-primary/15">
+          <CardHeader>
+            <CardTitle className="text-base">Doctor Portal Features</CardTitle>
+            <CardDescription>What you can manage after login</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid sm:grid-cols-2 gap-2 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <Stethoscope className="h-4 w-4 text-primary" />
+                <span>Patient consultations and records</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-primary" />
+                <span>Prescription management</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-primary" />
+                <span>Appointment scheduling</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CreditCard className="h-4 w-4 text-primary" />
+                <span>Billing and payments</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Shield className="h-4 w-4 text-primary" />
+                <span>Blockchain-verified credentials</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <User className="h-4 w-4 text-primary" />
+                <span>Professional profile management</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
         </div>
       </div>
     </div>

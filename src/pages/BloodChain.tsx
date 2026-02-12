@@ -1,12 +1,13 @@
 import { useMemo, useState } from "react";
-import { Navbar } from "@/components/Navbar";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Copy, Mail, Phone, MapPin } from "lucide-react";
+import { Copy, Mail, Phone, MapPin, Droplet, Heart, Sun, Moon, X } from "lucide-react";
 import { toast } from "sonner";
+import { useTheme } from "@/contexts/ThemeContext";
 
 type Donor = {
   id: number;
@@ -59,6 +60,8 @@ const BANKS: Bank[] = [
 ];
 
 export default function BloodChain() {
+  const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
   const [blood, setBlood] = useState("");
   const [city, setCity] = useState("");
 
@@ -78,45 +81,96 @@ export default function BloodChain() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      <main className="container mx-auto p-4 md:p-6 space-y-6">
-        <div className="flex items-center gap-4">
-          <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center">
-            <DropletIcon />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold">BloodChain</h1>
-            <p className="text-muted-foreground">Find nearby donors by blood group</p>
-          </div>
-        </div>
+  const clearAll = () => {
+    setBlood("");
+    setCity("");
+  };
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Search Donors</CardTitle>
+  return (
+    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,hsla(var(--primary),0.14),transparent_55%),radial-gradient(ellipse_at_bottom,hsla(var(--secondary),0.12),transparent_55%)]">
+      {/* Header */}
+      <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+          <button type="button" onClick={() => navigate("/")} className="flex items-center gap-2">
+            <div className="h-9 w-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+              <Heart className="h-5 w-5 text-primary" />
+            </div>
+            <div className="leading-tight text-left">
+              <div className="font-bold">RakshaHealth</div>
+              <div className="text-xs text-muted-foreground">BloodChain</div>
+            </div>
+          </button>
+          
+          <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} title="Toggle theme">
+            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </Button>
+        </div>
+      </header>
+      
+      <main className="container mx-auto px-4 py-10">
+        <div className="mx-auto w-full max-w-4xl space-y-6">
+        {/* Header */}
+          <div className="text-center space-y-2">
+            <div className="flex items-center justify-center gap-3">
+              <div className="h-12 w-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+                <Droplet className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-3xl md:text-4xl font-bold tracking-tight">BloodChain</h1>
+                <p className="text-sm text-muted-foreground">Find nearby donors by blood group</p>
+              </div>
+            </div>
+          </div>
+
+        <Card className="border-primary/15">
+          <CardHeader className="bg-gradient-to-r from-primary/5 to-secondary/5">
+            <CardTitle className="flex items-center gap-2">
+              <Droplet className="h-5 w-5 text-primary" />
+              Search Donors
+            </CardTitle>
             <CardDescription>Filter by blood group and city</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label>Blood Group</Label>
                 <div className="grid grid-cols-4 gap-2">
                   {BLOOD_GROUPS.map(bg => (
                     <button
                       key={bg}
-                      className={`px-2 py-1 text-sm rounded border transition ${blood === bg ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
+                      className={`px-3 py-2 text-sm font-medium rounded-lg border transition-all ${
+                        blood === bg
+                          ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                          : 'hover:bg-muted border-border'
+                      }`}
                       onClick={() => setBlood(blood === bg ? "" : bg)}
                     >{bg}</button>
                   ))}
                 </div>
               </div>
-              <div className="space-y-2 md:col-span-2">
+              <div className="space-y-2">
                 <Label htmlFor="city">City</Label>
-                <Input id="city" placeholder="e.g. Mumbai" value={city} onChange={(e) => setCity(e.target.value)} />
-              </div>
-              <div className="flex items-end">
-                <Button variant="outline" className="w-full" onClick={() => { setBlood(""); setCity(""); }}>Clear</Button>
+                <div className="relative">
+                  <Input
+                    id="city"
+                    placeholder="e.g. Mumbai"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    className="pr-10"
+                  />
+                  {(city || blood) && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                      onClick={clearAll}
+                      title="Clear filters"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           </CardContent>
@@ -124,61 +178,64 @@ export default function BloodChain() {
 
         <div className="grid gap-4">
           {results.map(d => (
-            <Card key={d.id} className="hover:shadow-md transition-all">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-lg">{d.name}</h3>
-                      <Badge>{d.blood}</Badge>
+            <Card key={d.id} className="border-primary/15 hover:shadow-lg hover:translate-y-[-2px] transition-all">
+              <CardContent className="p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-lg">{d.name}</h3>
+                        <Badge className="bg-red-100 text-red-700 border-red-200">{d.blood}</Badge>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <MapPin className="h-4 w-4" /> {d.city}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <MapPin className="h-4 w-4" /> {d.city}
+                    <div className="flex flex-wrap gap-2">
+                      <Button variant="outline" size="sm" onClick={() => copy(d.phone, 'Phone')}>
+                        <Phone className="h-4 w-4 mr-2" /> Copy Phone
+                      </Button>
+                      <Button variant="secondary" size="sm" onClick={() => window.open(`mailto:${d.email}`)}>
+                        <Mail className="h-4 w-4 mr-2" /> Email
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => copy(d.email, 'Email')}>
+                        <Copy className="h-4 w-4 mr-2" /> Copy Email
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={() => copy(d.phone, 'Phone')}>
-                      <Phone className="h-4 w-4 mr-2" /> Copy Phone
-                    </Button>
-                    <Button variant="secondary" size="sm" onClick={() => window.open(`mailto:${d.email}`)}>
-                      <Mail className="h-4 w-4 mr-2" /> Email
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => copy(d.email, 'Email')}>
-                      <Copy className="h-4 w-4 mr-2" /> Copy Email
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-          {results.length === 0 && (
-            <Card>
-              <CardContent className="py-10 text-center text-sm text-muted-foreground">
-                No donors match your filters.
-              </CardContent>
-            </Card>
-          )}
-        </div>
+                </CardContent>
+              </Card>
+            ))}
+            {results.length === 0 && (
+              <Card>
+                <CardContent className="py-10 text-center text-sm text-muted-foreground">
+                  No donors match your filters.
+                </CardContent>
+              </Card>
+            )}
+          </div>
 
         {/* Nearby Blood Banks */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Nearby Blood Banks</CardTitle>
+        <Card className="border-primary/15">
+          <CardHeader className="bg-gradient-to-r from-primary/5 to-secondary/5">
+            <CardTitle className="flex items-center gap-2">
+              <Droplet className="h-5 w-5 text-primary" />
+              Nearby Blood Banks
+            </CardTitle>
             <CardDescription>Contact registered banks in your city</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="p-6 space-y-3">
             {BANKS.filter(b => city ? b.city.toLowerCase().includes(city.toLowerCase()) : true).map(bank => (
-              <div key={bank.id} className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors">
-                <div>
+              <div key={bank.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-xl border bg-card hover:bg-muted/40 transition-colors">
+                <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <h3 className="font-medium">{bank.name}</h3>
-                    <Badge variant="secondary">{bank.type}</Badge>
+                    <Badge variant={bank.type === 'Government' ? 'default' : 'secondary'}>{bank.type}</Badge>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <MapPin className="h-4 w-4" /> {bank.city}
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button variant="outline" size="sm" onClick={() => copy(bank.phone, 'Phone')}>
                     <Phone className="h-4 w-4 mr-2" /> Copy Phone
                   </Button>
@@ -196,17 +253,9 @@ export default function BloodChain() {
             )}
           </CardContent>
         </Card>
+        </div>
       </main>
     </div>
   );
 }
-
-function DropletIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-8 w-8 text-primary">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3.5c2.8 3.5 7 7.2 7 11.2a7 7 0 10-14 0c0-4 4.2-7.7 7-11.2z" />
-    </svg>
-  );
-}
-
 

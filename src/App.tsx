@@ -37,6 +37,7 @@ import BookAppointment from "./pages/BookAppointment";
 import PharmacyAuth from "./pages/PharmacyAuth";
 import PharmacyRegistration from "./pages/PharmacyRegistration";
 import PharmacyDashboard from "./pages/PharmacyDashboard";
+import EmergencyContact from "./components/EmergencyContact";
 
 const queryClient = new QueryClient();
 
@@ -54,7 +55,8 @@ const App = () => {
                 <Toaster />
                 <Sonner />
                 <BrowserRouter>
-                <Routes>
+                  <EmergencyContact />
+                  <Routes>
             {/* Patient Portal Routes */}
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
