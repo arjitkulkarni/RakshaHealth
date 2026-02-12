@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -40,19 +40,6 @@ type Doctor = {
   availability: string[];
   languages: string[];
   image?: string;
-};
-
-type Appointment = {
-  id: string;
-  doctorId: string;
-  doctorName: string;
-  specialty: string;
-  date: string;
-  time: string;
-  type: "video" | "audio" | "chat";
-  status: "scheduled" | "completed" | "cancelled";
-  symptoms: string;
-  meetingLink?: string;
 };
 
 const DOCTORS: Doctor[] = [
@@ -213,13 +200,11 @@ const DOCTORS: Doctor[] = [
   },
 ];
 
-const STORAGE_KEY = "medination_appointments";
-
 export default function TeleHealth() {
   console.log('TeleHealth: Component started rendering');
   
   const { isAuthenticated, user, isLoading } = useAuth();
-  const { addAppointmentRequest, appointmentRequests } = useAppointments();
+  const { addAppointmentRequest, appointmentRequests, cancelAppointment } = useAppointments();
   
   console.log('TeleHealth: Auth hook values - isLoading:', isLoading, 'isAuthenticated:', isAuthenticated, 'user:', user ? user.name : 'null');
   const [searchQuery, setSearchQuery] = useState("");
@@ -227,7 +212,6 @@ export default function TeleHealth() {
   const [selectedFacilityType, setSelectedFacilityType] = useState("all");
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [showBookingDialog, setShowBookingDialog] = useState(false);
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [bookingForm, setBookingForm] = useState({
     date: "",
     time: "",
@@ -274,30 +258,10 @@ export default function TeleHealth() {
 
   console.log('TeleHealth: Rendering main content for user:', user.name);
 
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      const allAppointments = stored ? JSON.parse(stored) : {};
-      const userAppointments = allAppointments[user?.id || ""] || [];
-      setAppointments(userAppointments);
-    } catch {
-      setAppointments([]);
-    }
-  }, [user?.id]);
-
-  const saveAppointment = (appointment: Appointment) => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      const allAppointments = stored ? JSON.parse(stored) : {};
-      const userAppointments = allAppointments[user?.id || ""] || [];
-      userAppointments.push(appointment);
-      allAppointments[user?.id || ""] = userAppointments;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(allAppointments));
-      setAppointments(userAppointments);
-    } catch (error) {
-      console.error("Error saving appointment:", error);
-    }
-  };
+  const myRequests = appointmentRequests.filter((r) => r.patientId === user.id);
+  const pendingRequests = myRequests.filter((r) => r.status === 'pending');
+  const upcomingAppointments = myRequests.filter((r) => r.status === 'accepted');
+  const pastAppointments = myRequests.filter((r) => r.status === 'completed');
 
   const filteredDoctors = DOCTORS.filter((doctor) => {
     const matchesSearch =
@@ -344,9 +308,6 @@ export default function TeleHealth() {
     setSelectedDoctor(null);
     setBookingForm({ date: "", time: "", type: "video_call", symptoms: "", urgency: "medium" });
   };
-
-  const upcomingAppointments = appointments.filter((apt) => apt.status === "scheduled");
-  const pastAppointments = appointments.filter((apt) => apt.status === "completed");
 
   const getMinDate = () => {
     const today = new Date();
@@ -538,6 +499,73 @@ export default function TeleHealth() {
 
           {/* My Appointments Tab */}
           <TabsContent value="appointments" className="space-y-6">
+            {/* Pending Requests */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Pending Requests</CardTitle>
+                <CardDescription>Requests waiting for doctor confirmation</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {pendingRequests.length === 0 ? (
+                  <div className="text-center py-8 text-sm text-muted-foreground">
+                    <Send className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                    <p>No pending requests</p>
+                  </div>
+                ) : (
+                  pendingRequests.map((apt) => (
+                    <Card key={apt.id} className="border-l-4 border-l-orange-500">
+                      <CardContent className="pt-6">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h3 className="font-semibold text-lg">{apt.doctorName}</h3>
+                              <Badge variant="secondary">{apt.department}</Badge>
+                              <Badge variant="outline" className="border-orange-200 text-orange-600">
+                                Pending
+                              </Badge>
+                            </div>
+                            <div className="space-y-1 text-sm text-muted-foreground">
+                              <div className="flex items-center gap-2">
+                                <Calendar className="h-4 w-4" />
+                                <span>{new Date(apt.requestedDate).toLocaleDateString("en-IN")}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Clock className="h-4 w-4" />
+                                <span>{apt.requestedTime}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {apt.preferredType === "video_call" && <Video className="h-4 w-4" />}
+                                {apt.preferredType === "audio_call" && <Phone className="h-4 w-4" />}
+                                {apt.preferredType === "in_person" && <User className="h-4 w-4" />}
+                                <span className="capitalize">{apt.preferredType.replace("_", " ")}</span>
+                              </div>
+                            </div>
+                            <div className="mt-3">
+                              <p className="text-sm">
+                                <span className="font-medium">Symptoms:</span> {apt.symptoms}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                cancelAppointment(apt.id);
+                                toast.success("Appointment request cancelled");
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+
             {/* Upcoming Appointments */}
             <Card>
               <CardHeader>
@@ -558,13 +586,13 @@ export default function TeleHealth() {
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
                               <h3 className="font-semibold text-lg">{apt.doctorName}</h3>
-                              <Badge variant="secondary">{apt.specialty}</Badge>
+                              <Badge variant="secondary">{apt.department}</Badge>
                             </div>
                             <div className="space-y-1 text-sm text-muted-foreground">
                               <div className="flex items-center gap-2">
                                 <Calendar className="h-4 w-4" />
                                 <span>
-                                  {new Date(apt.date).toLocaleDateString("en-IN", {
+                                  {new Date(apt.scheduledDate || apt.requestedDate).toLocaleDateString("en-IN", {
                                     weekday: "long",
                                     year: "numeric",
                                     month: "long",
@@ -574,13 +602,13 @@ export default function TeleHealth() {
                               </div>
                               <div className="flex items-center gap-2">
                                 <Clock className="h-4 w-4" />
-                                <span>{apt.time}</span>
+                                <span>{apt.scheduledTime || apt.requestedTime}</span>
                               </div>
                               <div className="flex items-center gap-2">
-                                {apt.type === "video" && <Video className="h-4 w-4" />}
-                                {apt.type === "audio" && <Phone className="h-4 w-4" />}
-                                {apt.type === "chat" && <MessageSquare className="h-4 w-4" />}
-                                <span className="capitalize">{apt.type} Consultation</span>
+                                {apt.preferredType === "video_call" && <Video className="h-4 w-4" />}
+                                {apt.preferredType === "audio_call" && <Phone className="h-4 w-4" />}
+                                {apt.preferredType === "in_person" && <User className="h-4 w-4" />}
+                                <span className="capitalize">{apt.preferredType.replace("_", " ")}</span>
                               </div>
                             </div>
                             <div className="mt-3">
@@ -606,13 +634,7 @@ export default function TeleHealth() {
                               size="sm"
                               variant="outline"
                               onClick={() => {
-                                const updatedAppointments = appointments.map((a) =>
-                                  a.id === apt.id ? { ...a, status: "cancelled" as const } : a
-                                );
-                                const allAppointments = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-                                allAppointments[user?.id || ""] = updatedAppointments;
-                                localStorage.setItem(STORAGE_KEY, JSON.stringify(allAppointments));
-                                setAppointments(updatedAppointments);
+                                cancelAppointment(apt.id);
                                 toast.success("Appointment cancelled");
                               }}
                             >
@@ -643,7 +665,7 @@ export default function TeleHealth() {
                       <div>
                         <p className="font-medium">{apt.doctorName}</p>
                         <p className="text-sm text-muted-foreground">
-                          {new Date(apt.date).toLocaleDateString("en-IN")} • {apt.time}
+                          {new Date(apt.scheduledDate || apt.requestedDate).toLocaleDateString("en-IN")} • {apt.scheduledTime || apt.requestedTime}
                         </p>
                       </div>
                       <Badge variant="outline">
