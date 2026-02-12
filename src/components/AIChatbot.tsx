@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { usePushToTalk } from "@/hooks/use-push-to-talk";
 import {
   Dialog,
   DialogContent,
@@ -31,6 +32,8 @@ import {
   HelpCircle,
   Stethoscope,
   Activity,
+  Mic,
+  MicOff,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -70,6 +73,25 @@ export function AIChatbot({ isOpen, onToggle }: AIChatbotProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const {
+    supported: isVoiceSupported,
+    isListening,
+    error: voiceError,
+    start: startListening,
+    stop: stopListening,
+  } = usePushToTalk({
+    language: "en-IN",
+    onInterimTranscript: (text) => {
+      setInputMessage(text);
+    },
+    onFinalTranscript: (text) => {
+      setInputMessage(text);
+      setTimeout(() => {
+        handleSendMessage();
+      }, 50);
+    },
+  });
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -83,6 +105,12 @@ export function AIChatbot({ isOpen, onToggle }: AIChatbotProps) {
       inputRef.current?.focus();
     }
   }, [isOpen, isMinimized]);
+
+  useEffect(() => {
+    if (voiceError) {
+      toast.error(`Voice input error: ${voiceError}`);
+    }
+  }, [voiceError]);
 
   const quickResponses = {
     'book an appointment': {
@@ -509,6 +537,23 @@ export function AIChatbot({ isOpen, onToggle }: AIChatbotProps) {
                   className="flex-1"
                   disabled={isTyping}
                 />
+                <Button
+                  type="button"
+                  variant={isListening ? "default" : "outline"}
+                  onClick={() => {
+                    if (!isVoiceSupported) {
+                      toast.error("Voice input is not supported in this browser");
+                      return;
+                    }
+                    if (isListening) stopListening();
+                    else startListening();
+                  }}
+                  size="icon"
+                  disabled={isTyping}
+                  title={isListening ? "Stop listening" : "Push to talk"}
+                >
+                  {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                </Button>
                 <Button
                   onClick={handleSendMessage}
                   disabled={!inputMessage.trim() || isTyping}

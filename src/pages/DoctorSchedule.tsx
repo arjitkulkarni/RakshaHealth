@@ -424,7 +424,14 @@ export default function DoctorSchedule() {
     if (!selectedRequest) return;
 
     // Accept the appointment request with scheduling details
-    acceptAppointment(selectedRequest.id, `Scheduled for ${scheduleData.date} at ${scheduleData.time} (${scheduleData.type.replace('_', ' ')})`);
+    acceptAppointment(
+      selectedRequest.id,
+      `Scheduled for ${scheduleData.date} at ${scheduleData.time} (${scheduleData.type.replace('_', ' ')})${scheduleData.notes ? ` — ${scheduleData.notes}` : ''}`,
+      scheduleData.date,
+      scheduleData.time,
+      scheduleData.type === 'video_call' ? 'https://meet.medination.com/room123' : undefined,
+      scheduleData.type === 'in_person' ? (scheduleData.location || 'Room 101') : undefined
+    );
     
     setIsScheduleDialogOpen(false);
     setSelectedRequest(null);
@@ -650,17 +657,17 @@ export default function DoctorSchedule() {
                   pendingRequests.map((request) => (
                     <div
                       key={request.id}
-                      className="p-4 rounded-lg border bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200"
+                      className="p-4 rounded-lg border bg-card"
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1 space-y-3">
                           <div className="flex items-center gap-2">
-                            <h4 className="font-semibold">{request.patientName}</h4>
+                            <h4 className="font-semibold text-foreground">{request.patientName}</h4>
                             <Badge className={getUrgencyColor(request.urgency)}>
                               {request.urgency} priority
                             </Badge>
                             <Badge variant="outline">
-                              {request.appointmentType}
+                              {request.preferredType.replace('_', ' ')}
                             </Badge>
                           </div>
                           
@@ -675,7 +682,7 @@ export default function DoctorSchedule() {
                             </div>
                             <div className="flex items-center gap-1">
                               <CalendarDays className="h-4 w-4" />
-                              <span>Requested: {new Date(request.requestedDate).toLocaleDateString('en-IN')}</span>
+                              <span>Requested: {request.requestedDate}</span>
                             </div>
                             <div className="flex items-center gap-1">
                               <Timer className="h-4 w-4" />
@@ -685,14 +692,14 @@ export default function DoctorSchedule() {
                           
                           <div className="space-y-1">
                             <p className="text-sm font-medium">Symptoms/Reason:</p>
-                            <p className="text-sm text-muted-foreground bg-white/60 p-2 rounded border">
+                            <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg border">
                               {request.symptoms}
                             </p>
                           </div>
                           
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <Clock className="h-3 w-3" />
-                            <span>Requested {new Date(request.requestedAt).toLocaleString('en-IN')}</span>
+                            <span>Requested {new Date(request.createdAt).toLocaleString('en-IN')}</span>
                           </div>
                         </div>
                         

@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { usePushToTalk } from "@/hooks/use-push-to-talk";
 import {
   Bot,
   Send,
@@ -11,6 +12,8 @@ import {
   X,
   Minimize2,
   Maximize2,
+  Mic,
+  MicOff,
   Shield,
 } from "lucide-react";
 
@@ -55,6 +58,25 @@ export function PharmacyAIChatbot({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const {
+    supported: isVoiceSupported,
+    isListening,
+    error: voiceError,
+    start: startListening,
+    stop: stopListening,
+  } = usePushToTalk({
+    language: "en-IN",
+    onInterimTranscript: (text) => {
+      setInputMessage(text);
+    },
+    onFinalTranscript: (text) => {
+      setInputMessage(text);
+      setTimeout(() => {
+        handleSendMessage();
+      }, 50);
+    },
+  });
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -68,6 +90,13 @@ export function PharmacyAIChatbot({
       inputRef.current?.focus();
     }
   }, [isOpen, isMinimized]);
+
+  useEffect(() => {
+    if (voiceError) {
+      // No toast dependency here, keep it silent. Consumers can see error in console.
+      console.error('Voice input error:', voiceError);
+    }
+  }, [voiceError]);
 
   const generateBotResponse = (userMessage: string): Message => {
     const msg = userMessage.toLowerCase();
@@ -390,6 +419,23 @@ export function PharmacyAIChatbot({
                   className="flex-1"
                   disabled={isTyping}
                 />
+                <Button
+                  type="button"
+                  variant={isListening ? "default" : "outline"}
+                  onClick={() => {
+                    if (!isVoiceSupported) {
+                      console.error('Voice input is not supported in this browser');
+                      return;
+                    }
+                    if (isListening) stopListening();
+                    else startListening();
+                  }}
+                  size="icon"
+                  disabled={isTyping}
+                  title={isListening ? "Stop listening" : "Push to talk"}
+                >
+                  {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                </Button>
                 <Button
                   onClick={handleSendMessage}
                   disabled={!inputMessage.trim() || isTyping}

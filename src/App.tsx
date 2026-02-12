@@ -8,6 +8,9 @@ import { AppointmentProvider } from "@/contexts/AppointmentContext";
 import { BillingProvider } from "@/contexts/BillingContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ThemeProvider as NextThemeProvider } from "next-themes";
+import Landing from "./pages/Landing";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Records from "./pages/Records";
@@ -53,7 +56,10 @@ const App = () => {
                 <BrowserRouter>
                 <Routes>
             {/* Patient Portal Routes */}
-            <Route path="/" element={<Auth />} />
+            <Route path="/" element={<Landing />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/records" element={<Records />} />
             <Route path="/wallet" element={<Wallet />} />

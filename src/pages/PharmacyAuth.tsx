@@ -202,14 +202,19 @@ export default function PharmacyAuth() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
+    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,hsla(var(--primary),0.14),transparent_55%),radial-gradient(ellipse_at_bottom,hsla(var(--secondary),0.12),transparent_55%)]">
       {/* Header with Account Dropdown */}
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Heart className="h-6 w-6 text-primary" />
-            <span className="font-bold text-xl">RakshaHealth</span>
-          </div>
+          <button type="button" onClick={() => navigate("/")} className="flex items-center gap-2">
+            <div className="h-9 w-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+              <Heart className="h-5 w-5 text-primary" />
+            </div>
+            <div className="leading-tight text-left">
+              <div className="font-bold">RakshaHealth</div>
+              <div className="text-xs text-muted-foreground">Pharmacy Portal</div>
+            </div>
+          </button>
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -245,38 +250,29 @@ export default function PharmacyAuth() {
         </div>
       </header>
       
-      <div className="flex items-center justify-center p-4">
-        <div className="w-full max-w-2xl space-y-6">
+      <div className="container mx-auto px-4 py-10">
+        <div className="mx-auto w-full max-w-3xl space-y-6">
         {/* Header */}
-        <div className="text-center space-y-2">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Heart className="h-12 w-12 text-primary" />
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              RakshaHealth
-            </h1>
-          </div>
-          <div className="flex items-center justify-center gap-2">
-            <div className="p-3 rounded-full bg-primary/10 border border-primary/20">
-              <Store className="h-8 w-8 text-primary" />
-            </div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-2xl font-bold text-primary">Pharmacy Portal</h2>
-              <Pill className="h-6 w-6 text-primary" />
+          <div className="text-center space-y-2">
+            <div className="flex items-center justify-center gap-3">
+              <div className="h-12 w-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+                <Store className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Pharmacy Portal</h1>
+                <p className="text-sm text-muted-foreground">Secure pharmacy management system</p>
+              </div>
             </div>
           </div>
-          <p className="text-muted-foreground">
-            Secure pharmacy management system
-          </p>
-        </div>
 
         {/* Language Selector */}
-        <Card>
+        <Card className="border-primary/15">
           <CardContent className="pt-6">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
               <Languages className="h-5 w-5 text-muted-foreground" />
               <Label htmlFor="language">Language</Label>
               <Select value={language} onValueChange={setLanguage}>
-                <SelectTrigger id="language" className="ml-auto w-[180px]">
+                <SelectTrigger id="language" className="sm:ml-auto w-full sm:w-[220px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -299,18 +295,16 @@ export default function PharmacyAuth() {
           </TabsList>
 
           {/* Sign In Tab */}
-          <TabsContent value="signin">
-            <Card>
-              <CardHeader>
+          <TabsContent value="signin" className="mt-4">
+            <Card className="border-primary/15">
+              <CardHeader className="bg-gradient-to-r from-primary/5 to-secondary/5">
                 <CardTitle className="flex items-center gap-2">
-                  <Building2 className="h-5 w-5" />
+                  <Building2 className="h-5 w-5 text-primary" />
                   Pharmacy Sign In
                 </CardTitle>
-                <CardDescription>
-                  Sign in with your pharmacy ID and safe PIN
-                </CardDescription>
+                <CardDescription>Sign in with your pharmacy ID and safe PIN</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-6">
                 <form onSubmit={handleSignIn} className="space-y-4">
                   {errors.general && (
                     <div className="flex items-center gap-2 text-sm text-destructive p-3 bg-destructive/10 rounded-lg">
@@ -369,23 +363,21 @@ export default function PharmacyAuth() {
           </TabsContent>
 
           {/* Sign Up Tab */}
-          <TabsContent value="signup">
-            <Card>
-              <CardHeader>
+          <TabsContent value="signup" className="mt-4">
+            <Card className="border-primary/15">
+              <CardHeader className="bg-gradient-to-r from-primary/5 to-secondary/5">
                 <CardTitle className="flex items-center gap-2">
-                  <Pill className="h-5 w-5" />
+                  <Pill className="h-5 w-5 text-primary" />
                   Register New Pharmacy
                 </CardTitle>
-                <CardDescription>
-                  Register your pharmacy to join the RakshaHealth network
-                </CardDescription>
+                <CardDescription>Register your pharmacy to join the RakshaHealth network</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-6">
                 <form onSubmit={handleSignUp} className="space-y-4">
                   {/* Pharmacy Information */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-medium flex items-center gap-2">
-                      <Building2 className="h-5 w-5" />
+                    <h3 className="text-base font-semibold flex items-center gap-2">
+                      <Building2 className="h-5 w-5 text-primary" />
                       Pharmacy Information
                     </h3>
                     
@@ -465,8 +457,8 @@ export default function PharmacyAuth() {
 
                   {/* Contact Information */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-medium flex items-center gap-2">
-                      <Phone className="h-5 w-5" />
+                    <h3 className="text-base font-semibold flex items-center gap-2">
+                      <Phone className="h-5 w-5 text-primary" />
                       Contact Information
                     </h3>
                     
@@ -510,8 +502,8 @@ export default function PharmacyAuth() {
 
                   {/* Address Information */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-medium flex items-center gap-2">
-                      <MapPin className="h-5 w-5" />
+                    <h3 className="text-base font-semibold flex items-center gap-2">
+                      <MapPin className="h-5 w-5 text-primary" />
                       Address Information
                     </h3>
                     
@@ -600,8 +592,8 @@ export default function PharmacyAuth() {
 
                   {/* Security Information */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-medium flex items-center gap-2">
-                      <Shield className="h-5 w-5" />
+                    <h3 className="text-base font-semibold flex items-center gap-2">
+                      <Shield className="h-5 w-5 text-primary" />
                       Security Information
                     </h3>
                     
@@ -654,20 +646,36 @@ export default function PharmacyAuth() {
         </Tabs>
 
         {/* Features Info */}
-        <Card className="bg-blue-50 border-blue-200">
-          <CardContent className="pt-6">
-            <div className="flex items-start gap-2">
-              <Building2 className="h-4 w-4 text-blue-600 mt-0.5" />
-              <div className="text-sm text-blue-800">
-                <p className="font-medium">Pharmacy Portal Features:</p>
-                <ul className="mt-2 space-y-1 text-xs">
-                  <li>• Medicine inventory management</li>
-                  <li>• Prescription verification</li>
-                  <li>• Order processing and tracking</li>
-                  <li>• Medicine authenticity verification</li>
-                  <li>• Real-time stock monitoring</li>
-                  <li>• Customer management system</li>
-                </ul>
+        <Card className="border-primary/15">
+          <CardHeader>
+            <CardTitle className="text-base">Pharmacy Portal Features</CardTitle>
+            <CardDescription>What you can manage after login</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid sm:grid-cols-2 gap-2 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <Pill className="h-4 w-4 text-primary" />
+                <span>Medicine inventory management</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-primary" />
+                <span>Prescription verification</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-primary" />
+                <span>Order processing and tracking</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Shield className="h-4 w-4 text-primary" />
+                <span>Authenticity verification (demo)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Store className="h-4 w-4 text-primary" />
+                <span>Real-time stock monitoring</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <User className="h-4 w-4 text-primary" />
+                <span>Customer management</span>
               </div>
             </div>
           </CardContent>
@@ -692,7 +700,7 @@ export default function PharmacyAuth() {
               <div className="text-sm text-muted-foreground">
                 <p className="font-medium text-foreground mb-1">Secure Pharmacy Portal</p>
                 <p>
-                  Your pharmacy data is encrypted and secure. All medicine transactions 
+                  Your pharmacy data is encrypted and secure. All medicine transactions
                   are verified through blockchain technology for authenticity.
                 </p>
               </div>

@@ -385,6 +385,7 @@ export default function DoctorDashboard() {
               <div className="text-right">
                 <p className="text-sm font-medium">{doctor.name}</p>
                 <p className="text-xs text-muted-foreground">{doctor.department} • {doctor.hospitalName}</p>
+                <p className="text-xs text-muted-foreground">VID: {doctor.id}</p>
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

@@ -341,7 +341,7 @@ const INITIAL_PRESCRIPTIONS: Prescription[] = [
 
 export default function PharmacyDashboard() {
   const navigate = useNavigate();
-  const { isPharmacyAuthenticated, isLoading, logout } = useAuth();
+  const { isPharmacyAuthenticated, isLoading, logout, pharmacy } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -491,6 +491,7 @@ export default function PharmacyDashboard() {
               <div className="text-right">
                 <p className="text-sm font-medium">{pharmacyInfo.name}</p>
                 <p className="text-xs text-muted-foreground">License: {pharmacyInfo.license}</p>
+                <p className="text-xs text-muted-foreground">VID: {pharmacy?.id || pharmacyInfo.license}</p>
               </div>
               <Avatar className="h-10 w-10">
                 <AvatarFallback>
