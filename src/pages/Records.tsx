@@ -360,10 +360,7 @@ export default function Records() {
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
-              <span className="truncate pr-4">{selectedRecord?.fileName}</span>
-              <Button variant="ghost" size="icon" onClick={() => setSelectedRecord(null)}>
-                <X className="h-4 w-4" />
-              </Button>
+              <span className="truncate pr-10">{selectedRecord?.fileName}</span>
             </DialogTitle>
             <DialogDescription>
               <div className="flex flex-wrap gap-3 mt-2">
