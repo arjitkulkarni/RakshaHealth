@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,11 +8,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Heart, Shield, Languages, AlertCircle, Building2, Pill, MapPin, Phone, Mail, User, FileText } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Heart, Shield, Languages, AlertCircle, Building2, Pill, MapPin, Phone, Mail, User, FileText, Store, Settings, LogOut, UserCircle } from "lucide-react";
 import { toast } from "sonner";
 
 export default function PharmacyAuth() {
   const navigate = useNavigate();
+  const { pharmacyLogin } = useAuth();
   const [language, setLanguage] = useState("en");
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -69,8 +79,8 @@ export default function PharmacyAuth() {
     }
 
     try {
-      // Demo pharmacy credentials
-      if (pharmacyId === "PH001" && safePin === "1234") {
+      const success = await pharmacyLogin(pharmacyId, safePin);
+      if (success) {
         toast.success("Welcome to your pharmacy portal!");
         navigate("/pharmacy-dashboard");
       } else {
@@ -192,19 +202,67 @@ export default function PharmacyAuth() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-4">
-      <div className="w-full max-w-2xl space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
+      {/* Header with Account Dropdown */}
+      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Heart className="h-6 w-6 text-primary" />
+            <span className="font-bold text-xl">RakshaHealth</span>
+          </div>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                <UserCircle className="h-8 w-8" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="end" forceMount>
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">Pharmacy Account</p>
+                  <p className="text-xs leading-none text-muted-foreground">
+                    Pharmacy Management Portal
+                  </p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                <User className="mr-2 h-4 w-4" />
+                <span>Profile</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Settings</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Log out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </header>
+      
+      <div className="flex items-center justify-center p-4">
+        <div className="w-full max-w-2xl space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
           <div className="flex items-center justify-center gap-2 mb-4">
             <Heart className="h-12 w-12 text-primary" />
             <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              MediNation
+              RakshaHealth
             </h1>
           </div>
           <div className="flex items-center justify-center gap-2">
-            <Pill className="h-6 w-6 text-primary" />
-            <h2 className="text-2xl font-bold text-primary">Pharmacy Portal</h2>
+            <div className="p-3 rounded-full bg-primary/10 border border-primary/20">
+              <Store className="h-8 w-8 text-primary" />
+            </div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-2xl font-bold text-primary">Pharmacy Portal</h2>
+              <Pill className="h-6 w-6 text-primary" />
+            </div>
           </div>
           <p className="text-muted-foreground">
             Secure pharmacy management system
@@ -641,6 +699,7 @@ export default function PharmacyAuth() {
             </div>
           </CardContent>
         </Card>
+        </div>
       </div>
     </div>
   );

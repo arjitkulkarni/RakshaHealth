@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { generateUserVIDFallback } from "@/lib/utils";
+import { createABHAProfile, ABHAProfile } from "@/lib/abha";
 
 export interface User {
   id: string;
@@ -9,8 +10,10 @@ export interface User {
   address: string;
   safePin: string;
   password: string;
+  email?: string;
   createdAt: string;
   vid?: string;
+  abhaProfile?: ABHAProfile;
   userType?: 'patient' | 'doctor' | 'hospital';
 }
 
@@ -36,13 +39,17 @@ export interface Doctor {
 interface AuthContextType {
   user: User | null;
   doctor: Doctor | null;
+  pharmacy: any | null; // Add pharmacy type
   login: (phoneNumber: string, safePin: string) => Promise<boolean>;
   doctorLogin: (registrationNumber: string, hospitalId: string, password: string) => Promise<boolean>;
+  pharmacyLogin: (licenseNumber: string, password: string) => Promise<boolean>; // Add pharmacy login
   register: (userData: Omit<User, 'id' | 'createdAt'>) => Promise<boolean>;
   registerDoctor: (doctorData: Omit<Doctor, 'id' | 'createdAt'>) => Promise<boolean>;
+  registerPharmacy: (pharmacyData: any) => Promise<boolean>; // Add pharmacy registration
   logout: () => void;
   isAuthenticated: boolean;
   isDoctorAuthenticated: boolean;
+  isPharmacyAuthenticated: boolean; // Add pharmacy authentication
   isLoading: boolean;
   connectWallet: (walletAddress: string) => Promise<boolean>;
 }
@@ -61,12 +68,15 @@ const STORAGE_KEY = 'medination_users';
 const DOCTOR_STORAGE_KEY = 'medination_doctors';
 const CURRENT_USER_KEY = 'medination_current_user';
 const CURRENT_DOCTOR_KEY = 'medination_current_doctor';
+const CURRENT_PHARMACY_KEY = 'medination_current_pharmacy';
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [doctor, setDoctor] = useState<Doctor | null>(null);
+  const [pharmacy, setPharmacy] = useState<any | null>(null); // Add pharmacy state
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isDoctorAuthenticated, setIsDoctorAuthenticated] = useState(false);
+  const [isPharmacyAuthenticated, setIsPharmacyAuthenticated] = useState(false); // Add pharmacy auth state
   const [isLoading, setIsLoading] = useState(true);
 
   // Load current user and doctor on app start
@@ -85,6 +95,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           try {
             const userData = JSON.parse(currentUser);
             console.log('AuthContext: Setting user data:', userData.name);
+            
+            // Backfill ABHA profile if missing
+            if (!userData.abhaProfile) {
+              console.log('AuthContext: Backfilling ABHA profile for existing user');
+              userData.abhaProfile = createABHAProfile({
+                name: userData.name,
+                dateOfBirth: userData.dateOfBirth,
+                phoneNumber: userData.phoneNumber,
+              });
+              
+              // Update localStorage with ABHA profile
+              localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(userData));
+              
+              // Update users array
+              const users = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+              const updatedUsers = users.map((u: User) => u.id === userData.id ? userData : u);
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedUsers));
+              
+              console.log('AuthContext: ABHA profile created:', userData.abhaProfile);
+            }
+            
             // Use functional updates to ensure state consistency
             setUser(userData);
             setIsAuthenticated(true);
@@ -118,6 +149,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setDoctor(null);
           setIsDoctorAuthenticated(false);
         }
+
+        const currentPharmacy = localStorage.getItem(CURRENT_PHARMACY_KEY);
+        if (currentPharmacy) {
+          try {
+            const pharmacyData = JSON.parse(currentPharmacy);
+            setPharmacy(pharmacyData);
+            setIsPharmacyAuthenticated(true);
+          } catch {
+            localStorage.removeItem(CURRENT_PHARMACY_KEY);
+            setPharmacy(null);
+            setIsPharmacyAuthenticated(false);
+          }
+        } else {
+          setPharmacy(null);
+          setIsPharmacyAuthenticated(false);
+        }
         
         // Add a small delay to ensure state is properly set
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -150,13 +197,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         id: Date.now().toString(),
         createdAt: new Date().toISOString(),
       };
+
       // Generate deterministic VID (optionally includes wallet if available)
       const vid = await generateUserVIDFallback([
         baseUser.phoneNumber,
         baseUser.dateOfBirth,
         baseUser.id
       ]);
-      const newUser: User = { ...baseUser, vid };
+
+      // Generate ABHA profile
+      const abhaProfile = createABHAProfile({
+        name: baseUser.name,
+        dateOfBirth: baseUser.dateOfBirth,
+        phoneNumber: baseUser.phoneNumber,
+      });
+
+      const newUser: User = { ...baseUser, vid, abhaProfile };
 
       // Save to storage
       const updatedUsers = [...existingUsers, newUser];
@@ -188,10 +244,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             user.id
           ]);
           user.vid = vid;
-          // Persist back to users array
-          const updatedUsers = users.map((u: User) => u.id === user.id ? user : u);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedUsers));
         }
+
+        // Backfill ABHA profile if missing
+        if (!user.abhaProfile) {
+          user.abhaProfile = createABHAProfile({
+            name: user.name,
+            dateOfBirth: user.dateOfBirth,
+            phoneNumber: user.phoneNumber,
+          });
+        }
+
+        // Persist back to users array
+        const updatedUsers = users.map((u: User) => u.id === user.id ? user : u);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedUsers));
+        
         localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
         setUser(user);
         setIsAuthenticated(true);
@@ -290,10 +357,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     console.log('AuthContext: Logging out - clearing all auth data');
     localStorage.removeItem(CURRENT_USER_KEY);
     localStorage.removeItem(CURRENT_DOCTOR_KEY);
+    localStorage.removeItem(CURRENT_PHARMACY_KEY);
     setUser(null);
     setDoctor(null);
+    setPharmacy(null);
     setIsAuthenticated(false);
     setIsDoctorAuthenticated(false);
+    setIsPharmacyAuthenticated(false);
   };
 
   // Debug function to check localStorage state
@@ -317,13 +387,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const value: AuthContextType = {
     user,
     doctor,
+    pharmacy,
     login,
     doctorLogin,
+    pharmacyLogin: async (pharmacyIdOrLicense: string, pinOrPassword: string) => {
+      const success = pharmacyIdOrLicense === "PH001" && pinOrPassword === "1234";
+      if (success) {
+        const pharmacyData = { id: "PH001", name: "MediCare Pharmacy" };
+        setPharmacy(pharmacyData);
+        setIsPharmacyAuthenticated(true);
+        localStorage.setItem(CURRENT_PHARMACY_KEY, JSON.stringify(pharmacyData));
+      }
+      return success;
+    },
     register,
     registerDoctor,
+    registerPharmacy: async (pharmacyData: any) => {
+      // Simple pharmacy registration logic for demo
+      return true;
+    }, // Add pharmacy registration method
     logout,
     isAuthenticated,
     isDoctorAuthenticated,
+    isPharmacyAuthenticated,
     isLoading,
     connectWallet,
   };

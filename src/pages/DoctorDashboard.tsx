@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useAppointments, AppointmentRequest } from "@/contexts/AppointmentContext";
 import { useNavigate } from "react-router-dom";
 import { DoctorAIChatbot } from "@/components/DoctorAIChatbot";
@@ -20,6 +21,14 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Users,
   Calendar,
   Activity,
@@ -36,6 +45,7 @@ import {
   Plus,
   Eye,
   FileText,
+  CreditCard,
   Pill,
   Heart,
   Stethoscope,
@@ -50,6 +60,10 @@ import {
   Inbox,
   Video,
   Headphones,
+  Settings,
+  Moon,
+  Sun,
+  LogOut,
 } from "lucide-react";
 import { Navigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -75,27 +89,28 @@ interface Appointment {
 
 export default function DoctorDashboard() {
   const { doctor, isDoctorAuthenticated, isLoading: isAuthLoading, logout } = useAuth();
-  const { 
-    appointmentRequests, 
-    getPendingAppointments, 
-    getAppointmentsByDoctor,
-    acceptAppointment,
-    rejectAppointment,
-    completeAppointment 
-  } = useAppointments();
-  const navigate = useNavigate();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [selectedRequest, setSelectedRequest] = useState<AppointmentRequest | null>(null);
-  const [responseNotes, setResponseNotes] = useState('');
-  const [rejectReason, setRejectReason] = useState('');
-  const [showAcceptDialog, setShowAcceptDialog] = useState(false);
-  const [showRejectDialog, setShowRejectDialog] = useState(false);
-  const [isDoctorChatbotOpen, setIsDoctorChatbotOpen] = useState(false);
-  const [scheduledDate, setScheduledDate] = useState('');
-  const [scheduledTime, setScheduledTime] = useState('');
-  const [meetingLink, setMeetingLink] = useState('');
-  const [location, setLocation] = useState('');
+    const { 
+      appointmentRequests, 
+      getPendingAppointments, 
+      getAppointmentsByDoctor,
+      acceptAppointment,
+      rejectAppointment,
+      completeAppointment 
+    } = useAppointments();
+    const navigate = useNavigate();
+    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [appointments, setAppointments] = useState<Appointment[]>([]);
+    const [selectedRequest, setSelectedRequest] = useState<AppointmentRequest | null>(null);
+    const [responseNotes, setResponseNotes] = useState('');
+    const [rejectReason, setRejectReason] = useState('');
+    const [showAcceptDialog, setShowAcceptDialog] = useState(false);
+    const [showRejectDialog, setShowRejectDialog] = useState(false);
+    const [isDoctorChatbotOpen, setIsDoctorChatbotOpen] = useState(false);
+    const [scheduledDate, setScheduledDate] = useState('');
+    const [scheduledTime, setScheduledTime] = useState('');
+    const [meetingLink, setMeetingLink] = useState('');
+    const [location, setLocation] = useState('');
+    const { theme, setTheme } = useTheme();
 
   console.log('DoctorDashboard: Render - isAuthLoading:', isAuthLoading);
   console.log('DoctorDashboard: Render - isDoctorAuthenticated:', isDoctorAuthenticated);
@@ -226,7 +241,12 @@ export default function DoctorDashboard() {
     return <Navigate to="/doctor-auth" replace />;
   }
 
-  console.log('DoctorDashboard: Rendering dashboard for doctor:', doctor.name);
+  console.log('DoctorDashboard: Rendering dashboard for doctor:', doctor?.name);
+
+  // Safety check - should never happen due to auth check above, but just in case
+  if (!doctor) {
+    return <Navigate to="/doctor-auth" replace />;
+  }
 
   // Calculate stats based on actual data
   const totalPatients = 3; // Rajesh Kumar, Priya Sharma, Amit Patel from DoctorPatients
@@ -366,14 +386,41 @@ export default function DoctorDashboard() {
                 <p className="text-sm font-medium">{doctor.name}</p>
                 <p className="text-xs text-muted-foreground">{doctor.department} • {doctor.hospitalName}</p>
               </div>
-              <Avatar className="h-10 w-10">
-                <AvatarFallback>
-                  <Stethoscope className="h-5 w-5" />
-                </AvatarFallback>
-              </Avatar>
-              <Button variant="outline" size="sm" onClick={handleLogout}>
-                Logout
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Settings className="h-4 w-4" />
+                    Accounts & Settings
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52">
+                  <DropdownMenuLabel>Accounts & Settings</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate("/account")}>
+                    <User className="h-4 w-4 mr-2" />
+                    Account
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => toast.info("Settings – coming soon")}>
+                    <Settings className="h-4 w-4 mr-2" />
+                    Settings
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">Theme</DropdownMenuLabel>
+                  <DropdownMenuItem onClick={() => setTheme("light")}>
+                    <Sun className="h-4 w-4 mr-2" />
+                    Light
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTheme("dark")}>
+                    <Moon className="h-4 w-4 mr-2" />
+                    Dark
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
@@ -415,6 +462,34 @@ export default function DoctorDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Quick Actions */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Quick Actions</CardTitle>
+                <CardDescription>Common clinical tasks at your fingertips</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <Button variant="outline" className="h-auto flex-col gap-2 p-4" onClick={() => navigate('/doctor-patients')}>
+                    <Users className="h-6 w-6" />
+                    <span className="text-sm">Manage Patients</span>
+                  </Button>
+                  <Button variant="outline" className="h-auto flex-col gap-2 p-4" onClick={() => navigate('/doctor-schedule')}>
+                    <Calendar className="h-6 w-6" />
+                    <span className="text-sm">Schedule</span>
+                  </Button>
+                  <Button variant="outline" className="h-auto flex-col gap-2 p-4" onClick={() => navigate('/doctor-billing')}>
+                    <CreditCard className="h-6 w-6" />
+                    <span className="text-sm">Billing</span>
+                  </Button>
+                  <Button variant="outline" className="h-auto flex-col gap-2 p-4" onClick={() => navigate('/doctor-records')}>
+                    <FileText className="h-6 w-6" />
+                    <span className="text-sm">Records</span>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Pending Appointment Requests */}
             {pendingRequests.length > 0 && (
               <Card>
@@ -434,12 +509,12 @@ export default function DoctorDashboard() {
                   {pendingRequests.map((request) => (
                     <div
                       key={request.id}
-                      className="p-4 rounded-lg border bg-gradient-to-r from-orange-50 to-yellow-50 border-orange-200"
+                      className="p-4 rounded-lg border bg-card"
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1 space-y-2">
                           <div className="flex items-center gap-2">
-                            <h4 className="font-semibold">{request.patientName}</h4>
+                            <h4 className="font-semibold text-foreground">{request.patientName}</h4>
                             <Badge className={getUrgencyColor(request.urgency)}>
                               {request.urgency} priority
                             </Badge>
@@ -466,7 +541,7 @@ export default function DoctorDashboard() {
                           
                           <div className="space-y-1">
                             <p className="text-sm font-medium">Symptoms:</p>
-                            <p className="text-sm text-muted-foreground bg-white/60 p-2 rounded border">
+                            <p className="text-sm text-muted-foreground bg-muted/50 p-2 rounded border">
                               {request.symptoms}
                             </p>
                           </div>
@@ -603,34 +678,6 @@ export default function DoctorDashboard() {
                 
                 <div className="text-center py-2">
                   <p className="text-sm text-muted-foreground">+ 8 more appointments today</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Quick Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-                <CardDescription>Common clinical tasks at your fingertips</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <Button variant="outline" className="h-auto flex-col gap-2 p-4" onClick={() => navigate('/doctor-patients')}>
-                    <Users className="h-6 w-6" />
-                    <span className="text-sm">Manage Patients</span>
-                  </Button>
-                  <Button variant="outline" className="h-auto flex-col gap-2 p-4" onClick={() => navigate('/doctor-schedule')}>
-                    <Calendar className="h-6 w-6" />
-                    <span className="text-sm">Schedule</span>
-                  </Button>
-                  <Button variant="outline" className="h-auto flex-col gap-2 p-4" onClick={() => navigate('/doctor-billing')}>
-                    <FileText className="h-6 w-6" />
-                    <span className="text-sm">Billing</span>
-                  </Button>
-                  <Button variant="outline" className="h-auto flex-col gap-2 p-4" onClick={() => navigate('/doctor-records')}>
-                    <Pill className="h-6 w-6" />
-                    <span className="text-sm">Records</span>
-                  </Button>
                 </div>
               </CardContent>
             </Card>

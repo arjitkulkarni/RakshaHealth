@@ -112,6 +112,10 @@ export const Navbar = () => {
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
+                      <Link to="/account" className="w-full">Account</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
                       <Link to="/settings" className="w-full">Settings</Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
@@ -148,6 +152,10 @@ export const Navbar = () => {
                         Dark Mode
                       </>
                     )}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/account" className="w-full">Account</Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>

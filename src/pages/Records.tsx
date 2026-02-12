@@ -3,11 +3,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Search, Upload, Filter, Download, Eye, Calendar, Building2, X } from "lucide-react";
+import { FileText, Search, Upload, Filter, Download, Eye, Calendar, Building2, X, Shield, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { formatABHANumber, maskABHANumber } from "@/lib/abha";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +21,7 @@ import { addSampleRecordsIfEmpty } from "@/lib/sampleRecords";
 
 const STORAGE_KEY = "medination_records_by_vid";
 
-type Record = {
+type MedicalRecord = {
   id: string;
   vid: string;
   hospitalName: string;
@@ -34,8 +35,8 @@ type Record = {
 export default function Records() {
   const { isAuthenticated, user } = useAuth();
   const [query, setQuery] = useState("");
-  const [records, setRecords] = useState<Record[]>([]);
-  const [selectedRecord, setSelectedRecord] = useState<Record | null>(null);
+  const [records, setRecords] = useState<MedicalRecord[]>([]);
+  const [selectedRecord, setSelectedRecord] = useState<MedicalRecord | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
 
   // Redirect to auth if not authenticated
@@ -70,7 +71,7 @@ export default function Records() {
   };
 
   const categorizedRecords = useMemo(() => {
-    const categories: Record<string, Record[]> = { 
+    const categories: { [key: string]: MedicalRecord[] } = { 
       'Lab Reports': [],
       'Prescriptions': [],
       'Imaging': [],
@@ -145,6 +146,20 @@ export default function Records() {
               Medical Records
             </h1>
             <p className="text-muted-foreground">View and manage your health documents securely</p>
+            
+            {/* ABHA ID Information */}
+            {user?.abhaProfile && (
+              <div className="mt-4 flex flex-wrap gap-3">
+                <Badge variant="secondary" className="flex items-center gap-2">
+                  <Shield className="h-3 w-3" />
+                  ABHA: {maskABHANumber(user.abhaProfile.abhaNumber)}
+                </Badge>
+                <Badge variant="outline" className="flex items-center gap-2">
+                  <User className="h-3 w-3" />
+                  {user.abhaProfile.abhaAddress}
+                </Badge>
+              </div>
+            )}
           </div>
           <Button onClick={() => {
             if (!user?.vid) return;

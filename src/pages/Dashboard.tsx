@@ -31,6 +31,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Navigate, useNavigate } from "react-router-dom";
 import { addSampleRecordsIfEmpty, seedSampleRecords } from "@/lib/sampleRecords";
+import { formatABHANumber, maskABHANumber } from "@/lib/abha";
 import {
   Dialog,
   DialogContent,
@@ -40,6 +41,7 @@ import {
 } from "@/components/ui/dialog";
 
 const STORAGE_KEY = "medination_records_by_vid";
+const WALLET_BALANCE_KEY = "payments_wallet_balance";
 
 type Record = {
   id: string;
@@ -61,6 +63,23 @@ export default function Dashboard() {
   const [selectedRecord, setSelectedRecord] = useState<Record | null>(null);
   const [bills, setBills] = useState<any[]>([]);
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
+  const [walletBalance, setWalletBalance] = useState<number>(2450);
+
+  const readWalletBalance = () => {
+    try {
+      const b = Number(localStorage.getItem(WALLET_BALANCE_KEY));
+      if (!Number.isNaN(b) && b >= 0) setWalletBalance(b);
+    } catch {
+      // keep default
+    }
+  };
+
+  useEffect(() => {
+    readWalletBalance();
+    const onFocus = () => readWalletBalance();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, []);
 
   console.log('Dashboard: Render - isLoading:', isLoading);
   console.log('Dashboard: Render - isAuthenticated:', isAuthenticated);
@@ -110,7 +129,7 @@ export default function Dashboard() {
   const totalPendingAmount = pendingBills.reduce((sum, bill) => sum + bill.amount, 0);
 
   const stats = [
-    { label: "Wallet Balance", value: "₹2,450", icon: TrendingUp, color: "text-primary" },
+    { label: "Wallet Balance", value: `₹${walletBalance.toLocaleString("en-IN")}`, icon: TrendingUp, color: "text-primary" },
     { label: "Upcoming Appointments", value: "2", icon: Calendar, color: "text-accent" },
     { label: "Pending Bills", value: pendingBills.length.toString(), icon: Receipt, color: "text-orange-600" },
     { label: "Active Prescriptions", value: "3", icon: Pill, color: "text-primary" },
@@ -186,13 +205,15 @@ export default function Dashboard() {
       <main className="container mx-auto p-4 md:p-6 space-y-6">
         {/* Welcome Section */}
         <div className="space-y-2">
+          {/* VID and ABHA ID Section */}
+        <div className="space-y-2">
           {user?.vid && (
-            <div className="inline-flex items-center gap-2 rounded-md border px-3 py-1 text-xs text-muted-foreground bg-muted/40">
+            <div className="inline-flex items-center gap-2 rounded-md border border-primary/20 px-3 py-1 text-xs text-primary bg-primary/10 animate-fade-in">
               <span className="opacity-70">VID:</span>
               <span className="font-mono font-medium">{user.vid}</span>
               <button
                 type="button"
-                className="ml-1 inline-flex items-center gap-1 rounded px-2 py-0.5 hover:bg-background/60 transition"
+                className="ml-1 inline-flex items-center gap-1 rounded px-2 py-0.5 hover:bg-primary/20 transition-all duration-200 hover:scale-105 text-primary"
                 onClick={async () => {
                   if (!user?.vid) return;
                   try {
@@ -207,14 +228,54 @@ export default function Dashboard() {
                 }}
                 aria-label="Copy VID"
               >
-                <Copy className="h-3.5 w-3.5" /> {copyBusy ? "Copying..." : "Copy"}
+                <Copy className="h-3.5 w-3.5 transition-transform hover:scale-110" /> {copyBusy ? "Copying..." : "Copy"}
               </button>
             </div>
           )}
+          {user?.abhaProfile?.abhaNumber && (
+            <div className="inline-flex items-center gap-2 rounded-md border border-primary/20 px-3 py-1 text-xs text-primary bg-primary/10 animate-fade-in animate-delay-100">
+              <span className="opacity-70">ABHA ID:</span>
+              <span className="font-mono font-medium">{maskABHANumber(user.abhaProfile.abhaNumber)}</span>
+              <button
+                type="button"
+                className="ml-1 inline-flex items-center gap-1 rounded px-2 py-0.5 hover:bg-primary/20 transition-all duration-200 hover:scale-105 text-primary"
+                onClick={async () => {
+                  if (!user?.abhaProfile?.abhaNumber) return;
+                  try {
+                    setCopyBusy(true);
+                    await navigator.clipboard.writeText(user.abhaProfile.abhaNumber);
+                    toast.success("ABHA ID copied to clipboard");
+                  } catch {
+                    toast.error("Failed to copy ABHA ID");
+                  } finally {
+                    setCopyBusy(false);
+                  }
+                }}
+                aria-label="Copy ABHA ID"
+              >
+                <Copy className="h-3.5 w-3.5 transition-transform hover:scale-110" /> {copyBusy ? "Copying..." : "Copy"}
+              </button>
+            </div>
+          )}
+        </div>
           <h1 className="text-3xl font-bold">Welcome back, {user?.name || 'User'}</h1>
           <p className="text-muted-foreground">
             Here's your health summary and recent activity
           </p>
+          
+          {/* ABHA ID Information */}
+          {user?.abhaProfile && (
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Badge variant="secondary" className="flex items-center gap-2">
+                <Shield className="h-3 w-3" />
+                ABHA: {maskABHANumber(user.abhaProfile.abhaNumber)}
+              </Badge>
+              <Badge variant="outline" className="flex items-center gap-2">
+                <User className="h-3 w-3" />
+                {user.abhaProfile.abhaAddress}
+              </Badge>
+            </div>
+          )}
         </div>
 
         {/* Stats Grid */}
@@ -409,7 +470,7 @@ export default function Dashboard() {
                     <CreditCard className="h-6 w-6" />
                     <span className="text-sm">Pay Bills</span>
                   </Button>
-                  <Button variant="outline" className="h-auto flex-col gap-2 p-4" onClick={() => navigate('/drugauth')}>
+                  <Button variant="outline" className="h-auto flex-col gap-2 p-4" onClick={() => navigate('/order-medicine')}>
                     <Pill className="h-6 w-6" />
                     <span className="text-sm">Order Medicine</span>
                   </Button>

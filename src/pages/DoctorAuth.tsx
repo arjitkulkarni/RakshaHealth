@@ -8,7 +8,15 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Heart, Shield, Wallet, Building2, User, Lock, Mail, Phone, GraduationCap } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Heart, Shield, Wallet, Building2, User, Lock, Mail, Phone, GraduationCap, Stethoscope, Settings, LogOut, UserCircle } from "lucide-react";
 import { toast } from "sonner";
 import { initializeSampleDoctors } from "@/lib/sampleDoctors";
 
@@ -152,21 +160,71 @@ export default function DoctorAuth() {
   const selectedHospital = SAMPLE_HOSPITALS.find(h => h.id === registerData.hospitalId);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-4xl">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
+      {/* Header with Account Dropdown */}
+      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Heart className="h-6 w-6 text-primary" />
+            <span className="font-bold text-xl">RakshaHealth</span>
+          </div>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                <UserCircle className="h-8 w-8" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="end" forceMount>
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">Doctor Account</p>
+                  <p className="text-xs leading-none text-muted-foreground">
+                    Medical Professional Portal
+                  </p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                <User className="mr-2 h-4 w-4" />
+                <span>Profile</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Settings</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Log out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </header>
+      
+      <div className="flex items-center justify-center p-4">
+        <div className="w-full max-w-4xl">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
             <Heart className="h-10 w-10 text-primary" />
-            <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               RakshaHealth
             </h1>
-              <p className="text-sm text-muted-foreground">Doctor Portal</p>
+          </div>
+          {/* Doctor Account Logo */}
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <div className="p-3 rounded-full bg-primary/10 border border-primary/20">
+              <Stethoscope className="h-8 w-8 text-primary" />
+            </div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-2xl font-bold text-primary">Doctor Portal</h2>
+              <Shield className="h-6 w-6 text-primary" />
             </div>
           </div>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Secure access for verified medical professionals and hospitals in our decentralized health ecosystem
+          <p className="text-muted-foreground">
+            Secure authentication for medical professionals
           </p>
         </div>
 
@@ -293,7 +351,7 @@ export default function DoctorAuth() {
                   Doctor Registration
                 </CardTitle>
                 <CardDescription>
-                  Join MediNation's verified medical professional network
+                  Join RakshaHealth's verified medical professional network
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -504,6 +562,7 @@ export default function DoctorAuth() {
           <Button variant="outline" onClick={() => navigate("/")}>
             Back to Patient Portal
           </Button>
+        </div>
         </div>
       </div>
     </div>

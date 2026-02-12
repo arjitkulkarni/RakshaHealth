@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { formatABHANumber, maskABHANumber } from "@/lib/abha";
 import {
   Dialog,
   DialogContent,
@@ -455,6 +456,24 @@ export default function Settings() {
                           <p className="text-sm text-muted-foreground font-mono">{user?.vid || 'Not generated'}</p>
                         </div>
                       </div>
+                      {user?.abhaProfile && (
+                        <>
+                          <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/10 border border-primary/20">
+                            <Shield className="h-5 w-5 text-primary" />
+                            <div>
+                              <p className="text-sm font-medium">ABHA Number</p>
+                              <p className="text-sm text-muted-foreground font-mono">{maskABHANumber(user.abhaProfile.abhaNumber)}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/10 border border-primary/20">
+                            <User className="h-5 w-5 text-primary" />
+                            <div>
+                              <p className="text-sm font-medium">ABHA Address</p>
+                              <p className="text-sm text-muted-foreground font-mono">{user.abhaProfile.abhaAddress}</p>
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 )}

@@ -21,6 +21,8 @@ import BloodChain from "./pages/BloodChain";
 import Insurance from "./pages/Insurance";
 import TeleHealth from "./pages/TeleHealth";
 import DrugAuth from "./pages/DrugAuth";
+import OrderMedicine from "./pages/OrderMedicine";
+import Account from "./pages/Account";
 // Doctor Portal imports
 import DoctorAuth from "./pages/DoctorAuth";
 import DoctorDashboard from "./pages/DoctorDashboard";
@@ -59,10 +61,12 @@ const App = () => {
             <Route path="/settings" element={<Settings />} />
             <Route path="/hospital" element={<Hospital />} />
             <Route path="/drugauth" element={<DrugAuth />} />
+            <Route path="/order-medicine" element={<OrderMedicine />} />
             <Route path="/telehealth" element={<TeleHealth />} />
             <Route path="/bloodchain" element={<BloodChain />} />
             <Route path="/insurance" element={<Insurance />} />
             <Route path="/book-appointment" element={<BookAppointment />} />
+            <Route path="/account" element={<Account />} />
             
             {/* Doctor Portal Routes */}
             <Route path="/doctor-auth" element={<DoctorAuth />} />

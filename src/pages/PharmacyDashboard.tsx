@@ -1,4 +1,7 @@
 import { useState, useEffect } from "react";
+import { useNavigate, Navigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +31,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Pill,
   Package,
@@ -66,9 +77,12 @@ import {
   Download,
   Upload,
   RefreshCw,
+  Key,
+  Moon,
+  Sun,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { PharmacyAIChatbot } from "@/components/PharmacyAIChatbot";
 
 interface Medicine {
   id: string;
@@ -129,140 +143,254 @@ interface Prescription {
   image?: string;
 }
 
+const PHARMACY_MEDICINES_KEY = "pharmacy_medicines";
+
+const INITIAL_PHARMACY_INFO = {
+  id: "PH001",
+  name: "MediCare Pharmacy",
+  owner: "Dr. Rajesh Kumar",
+  license: "PH/2024/001",
+  address: "123 Health Street, Medical District, Mumbai - 400001",
+  phone: "+91 98765 43210",
+  email: "info@medicarepharmacy.com",
+  rating: 4.8,
+  totalOrders: 1247,
+  totalRevenue: 2450000,
+  verifiedMedicines: 98.5,
+};
+
+const INITIAL_MEDICINES: Medicine[] = [
+  {
+    id: "MED001",
+    name: "Paracetamol 500mg",
+    manufacturer: "Sun Pharma",
+    batchNumber: "SP24001",
+    mfgDate: "2024-01-15",
+    expDate: "2026-01-15",
+    mrp: 25,
+    sellingPrice: 22,
+    stock: 150,
+    category: "Pain Relief",
+    prescriptionRequired: false,
+    verified: true,
+    blockchainHash: "0x1234567890abcdef",
+    composition: "Paracetamol 500mg",
+    sideEffects: ["Nausea", "Allergic reactions"],
+    dosage: "1-2 tablets every 4-6 hours",
+  },
+  {
+    id: "MED002",
+    name: "Amoxicillin 250mg",
+    manufacturer: "Cipla",
+    batchNumber: "CP24002",
+    mfgDate: "2024-02-01",
+    expDate: "2026-02-01",
+    mrp: 45,
+    sellingPrice: 40,
+    stock: 75,
+    category: "Antibiotic",
+    prescriptionRequired: true,
+    verified: true,
+    blockchainHash: "0xabcdef1234567890",
+    composition: "Amoxicillin 250mg",
+    sideEffects: ["Diarrhea", "Nausea", "Skin rash"],
+    dosage: "1 capsule twice daily",
+  },
+  {
+    id: "MED003",
+    name: "Metformin 500mg",
+    manufacturer: "Dr. Reddy's",
+    batchNumber: "DR24003",
+    mfgDate: "2024-01-20",
+    expDate: "2026-01-20",
+    mrp: 35,
+    sellingPrice: 30,
+    stock: 200,
+    category: "Diabetes",
+    prescriptionRequired: true,
+    verified: true,
+    blockchainHash: "0x9876543210fedcba",
+    composition: "Metformin HCl 500mg",
+    sideEffects: ["Nausea", "Diarrhea", "Metallic taste"],
+    dosage: "1 tablet twice daily with meals",
+  },
+  {
+    id: "MED004",
+    name: "Diclofenac 50mg",
+    manufacturer: "Zydus",
+    batchNumber: "ZY24004",
+    mfgDate: "2024-01-10",
+    expDate: "2026-01-10",
+    mrp: 18,
+    sellingPrice: 16,
+    stock: 8,
+    category: "Pain Relief",
+    prescriptionRequired: false,
+    verified: true,
+    blockchainHash: "0x1a2b3c4d5e6f",
+    composition: "Diclofenac Sodium 50mg",
+    sideEffects: ["Stomach upset", "Dizziness"],
+    dosage: "1 tablet twice daily after meals",
+  },
+  {
+    id: "MED005",
+    name: "Omeprazole 20mg",
+    manufacturer: "Torrent",
+    batchNumber: "TR24005",
+    mfgDate: "2024-02-12",
+    expDate: "2026-02-12",
+    mrp: 30,
+    sellingPrice: 26,
+    stock: 12,
+    category: "Gastric",
+    prescriptionRequired: false,
+    verified: true,
+    blockchainHash: "0x6f5e4d3c2b1a",
+    composition: "Omeprazole 20mg",
+    sideEffects: ["Headache", "Nausea"],
+    dosage: "1 capsule once daily before breakfast",
+  },
+  {
+    id: "MED006",
+    name: "Amlodipine 5mg",
+    manufacturer: "Lupin",
+    batchNumber: "LP24006",
+    mfgDate: "2024-03-01",
+    expDate: "2026-03-01",
+    mrp: 35,
+    sellingPrice: 30,
+    stock: 24,
+    category: "Cardiac",
+    prescriptionRequired: true,
+    verified: true,
+    blockchainHash: "0xabc123def456",
+    composition: "Amlodipine 5mg",
+    sideEffects: ["Swelling", "Fatigue"],
+    dosage: "1 tablet once daily",
+  },
+];
+
+const loadSeededMedicines = (): Medicine[] => {
+  try {
+    const raw = localStorage.getItem(PHARMACY_MEDICINES_KEY);
+    if (!raw) {
+      localStorage.setItem(PHARMACY_MEDICINES_KEY, JSON.stringify(INITIAL_MEDICINES));
+      return INITIAL_MEDICINES;
+    }
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      localStorage.setItem(PHARMACY_MEDICINES_KEY, JSON.stringify(INITIAL_MEDICINES));
+      return INITIAL_MEDICINES;
+    }
+    return parsed as Medicine[];
+  } catch {
+    localStorage.setItem(PHARMACY_MEDICINES_KEY, JSON.stringify(INITIAL_MEDICINES));
+    return INITIAL_MEDICINES;
+  }
+};
+
+const INITIAL_ORDERS: Order[] = [
+  {
+    id: "ORD001",
+    customerName: "Priya Sharma",
+    customerPhone: "9876543210",
+    customerVID: "V987654321",
+    prescriptionId: "PRES001",
+    medicines: [
+      { medicineId: "MED001", medicineName: "Paracetamol 500mg", quantity: 2, price: 44 },
+      { medicineId: "MED002", medicineName: "Amoxicillin 250mg", quantity: 1, price: 40 },
+    ],
+    totalAmount: 84,
+    status: 'ready',
+    orderDate: "2024-01-20T10:30:00Z",
+    deliveryDate: "2024-01-20T14:00:00Z",
+    paymentMethod: 'upi',
+    notes: "Customer prefers evening delivery",
+  },
+  {
+    id: "ORD002",
+    customerName: "Amit Patel",
+    customerPhone: "8765432109",
+    customerVID: "V456789123",
+    medicines: [
+      { medicineId: "MED003", medicineName: "Metformin 500mg", quantity: 3, price: 90 },
+    ],
+    totalAmount: 90,
+    status: 'processing',
+    orderDate: "2024-01-20T11:15:00Z",
+    paymentMethod: 'cash',
+  },
+];
+
+const INITIAL_PRESCRIPTIONS: Prescription[] = [
+  {
+    id: "PRES001",
+    patientName: "Priya Sharma",
+    patientVID: "V987654321",
+    doctorName: "Dr. Rajesh Kumar",
+    doctorId: "DOC001",
+    hospitalName: "Apollo Hospital",
+    date: "2024-01-20",
+    medicines: [
+      { name: "Paracetamol 500mg", dosage: "500mg", frequency: "Twice daily", duration: "5 days", quantity: 10 },
+      { name: "Amoxicillin 250mg", dosage: "250mg", frequency: "Twice daily", duration: "7 days", quantity: 14 },
+    ],
+    verified: true,
+  },
+];
+
 export default function PharmacyDashboard() {
   const navigate = useNavigate();
+  const { isPharmacyAuthenticated, isLoading, logout } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [showAddMedicine, setShowAddMedicine] = useState(false);
   const [showVerifyPrescription, setShowVerifyPrescription] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [pharmacyInfo] = useState(INITIAL_PHARMACY_INFO);
+  const [medicines, setMedicines] = useState<Medicine[]>(() => loadSeededMedicines());
+  const [orders, setOrders] = useState<Order[]>(INITIAL_ORDERS);
+  const [prescriptions, setPrescriptions] = useState<Prescription[]>(INITIAL_PRESCRIPTIONS);
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
+  const { setTheme } = useTheme();
 
-  // Sample pharmacy data
-  const [pharmacyInfo] = useState({
-    id: "PH001",
-    name: "MediCare Pharmacy",
-    owner: "Dr. Rajesh Kumar",
-    license: "PH/2024/001",
-    address: "123 Health Street, Medical District, Mumbai - 400001",
-    phone: "+91 98765 43210",
-    email: "info@medicarepharmacy.com",
-    rating: 4.8,
-    totalOrders: 1247,
-    totalRevenue: 2450000,
-    verifiedMedicines: 98.5,
-  });
+  useEffect(() => {
+    try {
+      localStorage.setItem(PHARMACY_MEDICINES_KEY, JSON.stringify(medicines));
+    } catch {
+      // ignore
+    }
+  }, [medicines]);
 
-  const [medicines, setMedicines] = useState<Medicine[]>([
-    {
-      id: "MED001",
-      name: "Paracetamol 500mg",
-      manufacturer: "Sun Pharma",
-      batchNumber: "SP24001",
-      mfgDate: "2024-01-15",
-      expDate: "2026-01-15",
-      mrp: 25,
-      sellingPrice: 22,
-      stock: 150,
-      category: "Pain Relief",
-      prescriptionRequired: false,
-      verified: true,
-      blockchainHash: "0x1234567890abcdef",
-      composition: "Paracetamol 500mg",
-      sideEffects: ["Nausea", "Allergic reactions"],
-      dosage: "1-2 tablets every 4-6 hours",
-    },
-    {
-      id: "MED002",
-      name: "Amoxicillin 250mg",
-      manufacturer: "Cipla",
-      batchNumber: "CP24002",
-      mfgDate: "2024-02-01",
-      expDate: "2026-02-01",
-      mrp: 45,
-      sellingPrice: 40,
-      stock: 75,
-      category: "Antibiotic",
-      prescriptionRequired: true,
-      verified: true,
-      blockchainHash: "0xabcdef1234567890",
-      composition: "Amoxicillin 250mg",
-      sideEffects: ["Diarrhea", "Nausea", "Skin rash"],
-      dosage: "1 capsule twice daily",
-    },
-    {
-      id: "MED003",
-      name: "Metformin 500mg",
-      manufacturer: "Dr. Reddy's",
-      batchNumber: "DR24003",
-      mfgDate: "2024-01-20",
-      expDate: "2026-01-20",
-      mrp: 35,
-      sellingPrice: 30,
-      stock: 200,
-      category: "Diabetes",
-      prescriptionRequired: true,
-      verified: true,
-      blockchainHash: "0x9876543210fedcba",
-      composition: "Metformin HCl 500mg",
-      sideEffects: ["Nausea", "Diarrhea", "Metallic taste"],
-      dosage: "1 tablet twice daily with meals",
-    },
-  ]);
+  // Check pharmacy authentication
+  useEffect(() => {
+    if (!isLoading && !isPharmacyAuthenticated) {
+      navigate("/pharmacy-auth");
+    }
+  }, [isPharmacyAuthenticated, isLoading, navigate]);
 
-  const [orders, setOrders] = useState<Order[]>([
-    {
-      id: "ORD001",
-      customerName: "Priya Sharma",
-      customerPhone: "9876543210",
-      customerVID: "V987654321",
-      prescriptionId: "PRES001",
-      medicines: [
-        { medicineId: "MED001", medicineName: "Paracetamol 500mg", quantity: 2, price: 44 },
-        { medicineId: "MED002", medicineName: "Amoxicillin 250mg", quantity: 1, price: 40 },
-      ],
-      totalAmount: 84,
-      status: 'ready',
-      orderDate: "2024-01-20T10:30:00Z",
-      deliveryDate: "2024-01-20T14:00:00Z",
-      paymentMethod: 'upi',
-      notes: "Customer prefers evening delivery",
-    },
-    {
-      id: "ORD002",
-      customerName: "Amit Patel",
-      customerPhone: "8765432109",
-      customerVID: "V456789123",
-      medicines: [
-        { medicineId: "MED003", medicineName: "Metformin 500mg", quantity: 3, price: 90 },
-      ],
-      totalAmount: 90,
-      status: 'processing',
-      orderDate: "2024-01-20T11:15:00Z",
-      paymentMethod: 'cash',
-    },
-  ]);
+  // Show loading screen while authentication state is being determined
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading pharmacy dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
-  const [prescriptions, setPrescriptions] = useState<Prescription[]>([
-    {
-      id: "PRES001",
-      patientName: "Priya Sharma",
-      patientVID: "V987654321",
-      doctorName: "Dr. Rajesh Kumar",
-      doctorId: "DOC001",
-      hospitalName: "Apollo Hospital",
-      date: "2024-01-20",
-      medicines: [
-        { name: "Paracetamol 500mg", dosage: "500mg", frequency: "Twice daily", duration: "5 days", quantity: 10 },
-        { name: "Amoxicillin 250mg", dosage: "250mg", frequency: "Twice daily", duration: "7 days", quantity: 14 },
-      ],
-      verified: true,
-    },
-  ]);
+  // Redirect if not authenticated
+  if (!isPharmacyAuthenticated) {
+    return <Navigate to="/pharmacy-auth" replace />;
+  }
 
   const handleLogout = () => {
+    logout();
     toast.success("Logged out successfully");
-    navigate("/");
+    navigate("/pharmacy-auth");
   };
 
   const handleUpdateOrderStatus = (orderId: string, status: Order['status']) => {
@@ -369,10 +497,41 @@ export default function PharmacyDashboard() {
                   <Building2 className="h-5 w-5" />
                 </AvatarFallback>
               </Avatar>
-              <Button variant="outline" size="sm" onClick={handleLogout}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Settings className="h-4 w-4" />
+                    Accounts & Settings
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52">
+                  <DropdownMenuLabel>Accounts & Settings</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate("/account")}>
+                    <User className="h-4 w-4 mr-2" />
+                    Account
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => toast.info("Settings – coming soon")}>
+                    <Settings className="h-4 w-4 mr-2" />
+                    Settings
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">Theme</DropdownMenuLabel>
+                  <DropdownMenuItem onClick={() => setTheme("light")}>
+                    <Sun className="h-4 w-4 mr-2" />
+                    Light
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTheme("dark")}>
+                    <Moon className="h-4 w-4 mr-2" />
+                    Dark
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
@@ -475,13 +634,39 @@ export default function PharmacyDashboard() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {medicines.filter(med => med.stock < 50).map((medicine) => (
-                    <div key={medicine.id} className="flex items-center justify-between p-3 rounded-lg border border-orange-200 bg-orange-50">
-                      <div className="flex-1">
-                        <p className="font-medium">{medicine.name}</p>
-                        <p className="text-sm text-muted-foreground">{medicine.manufacturer}</p>
-                        <p className="text-sm text-orange-600">Only {medicine.stock} left</p>
+                    <div
+                      key={medicine.id}
+                      className="flex items-center justify-between gap-4 p-4 rounded-xl border bg-card shadow-sm"
+                    >
+                      <div className="flex items-start gap-3 flex-1 min-w-0">
+                        <div className="mt-1 h-10 w-1.5 rounded-full bg-orange-500/60" />
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="font-semibold truncate">{medicine.name}</p>
+                            <Badge className="bg-orange-500/10 text-orange-600 border-orange-200">
+                              Low
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground truncate">{medicine.manufacturer}</p>
+                          <div className="mt-2 flex items-center gap-2">
+                            <Badge variant="outline" className="border-orange-200 text-orange-600">
+                              Only {medicine.stock} left
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">MRP ₹{medicine.mrp}</span>
+                          </div>
+                        </div>
                       </div>
-                      <Button size="sm" variant="outline">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="shrink-0 border-orange-200 hover:bg-orange-500/10"
+                        onClick={() => {
+                          setMedicines(prev =>
+                            prev.map(m => m.id === medicine.id ? { ...m, stock: m.stock + 50 } : m)
+                          );
+                          toast.success(`${medicine.name} restocked (+50)`);
+                        }}
+                      >
                         <Plus className="h-4 w-4 mr-1" />
                         Restock
                       </Button>
@@ -854,6 +1039,12 @@ export default function PharmacyDashboard() {
           </TabsContent>
         </Tabs>
       </main>
+
+      <PharmacyAIChatbot
+        isOpen={isChatbotOpen}
+        onToggle={() => setIsChatbotOpen(!isChatbotOpen)}
+        pharmacyName={pharmacyInfo.name}
+      />
     </div>
   );
 }
